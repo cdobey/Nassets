@@ -104,10 +104,10 @@ class Saving(SQLModel, table=True):
 
 # API Request/Response Models
 class UserCreate(SQLModel):
-    email: str
-    username: str
-    password: str
-    full_name: Optional[str] = None
+    email: str = Field(min_length=5, max_length=255)
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=8, max_length=128)
+    full_name: Optional[str] = Field(default=None, max_length=100)
 
 
 class UserLogin(SQLModel):

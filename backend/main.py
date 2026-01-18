@@ -4,8 +4,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from datetime import timedelta, date
 from dateutil.relativedelta import relativedelta
-from typing import List
+from typing import List, Annotated
 import calendar
+import os
+import re
 
 from database import create_db_and_tables, get_session
 from models import (
@@ -18,17 +20,21 @@ from models import (
 )
 from auth import (
     get_password_hash, verify_password, create_access_token,
-    get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
+    get_current_active_user, authenticate_user, ACCESS_TOKEN_EXPIRE_MINUTES,
+    PasswordValidator
 )
 
 app = FastAPI(title="Nassets - Financial Planner API")
 
+# Configure CORS - in production, specify exact origins
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS if os.getenv("ENVIRONMENT") == "production" else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
@@ -48,22 +54,62 @@ def health_check():
 
 
 # Auth endpoints
-@app.post("/api/auth/register", response_model=UserResponse)
+@app.post("/api/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, session: Session = Depends(get_session)):
+    """
+    Register a new user account.
+    
+    - Validates email format
+    - Validates username (alphanumeric, 3-50 chars)
+    - Validates password strength
+    - Creates user with hashed password
+    """
+    # Validate email format
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, user_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid email format"
+        )
+    
+    # Validate username format (alphanumeric, underscores, hyphens)
+    username_pattern = r'^[a-zA-Z0-9_-]+$'
+    if not re.match(username_pattern, user_data.username):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Username can only contain letters, numbers, underscores, and hyphens"
+        )
+    
+    # Validate password strength
+    is_valid, error_message = PasswordValidator.validate(user_data.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_message
+        )
+    
+    # Check for existing user
     statement = select(User).where(
-        (User.email == user_data.email) | (User.username == user_data.username)
+        (User.email == user_data.email.lower()) | (User.username == user_data.username.lower())
     )
     existing_user = session.exec(statement).first()
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email or username already registered"
-        )
+        if existing_user.email == user_data.email.lower():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this email already exists"
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This username is already taken"
+            )
     
+    # Create user with hashed password
     hashed_password = get_password_hash(user_data.password)
     db_user = User(
-        email=user_data.email,
-        username=user_data.username,
+        email=user_data.email.lower(),
+        username=user_data.username.lower(),
         hashed_password=hashed_password,
         full_name=user_data.full_name
     )
@@ -75,27 +121,40 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
 
 @app.post("/api/auth/login", response_model=Token)
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Session = Depends(get_session)
 ):
-    statement = select(User).where(User.username == form_data.username)
-    user = session.exec(statement).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    """
+    Authenticate user and return JWT access token.
+    
+    - Uses OAuth2 password flow
+    - Returns bearer token with configurable expiration
+    """
+    user = authenticate_user(session, form_data.username.lower(), form_data.password)
+    
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled. Please contact support."
+        )
+    
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(access_token=access_token, token_type="bearer")
 
 
 @app.get("/api/auth/me", response_model=UserResponse)
-def read_users_me(current_user: User = Depends(get_current_active_user)):
+def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+    """Get current authenticated user's information."""
     return current_user
 
 

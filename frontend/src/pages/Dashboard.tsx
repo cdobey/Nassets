@@ -29,8 +29,7 @@ import {
     TransactionTypeSelector,
     UpcomingTransactions,
 } from '@/components';
-import { useBudgetSummary, useCalendar, useCreateSaving, useCurrentUser } from '@/hooks';
-import { useAuthStore } from '@/store/auth';
+import { useBudgetSummary, useCalendar, useCreateSaving, useCurrentUser, useLogout } from '@/hooks';
 import { RecurrenceType } from '@/types';
 
 interface DroppedAsset {
@@ -45,7 +44,7 @@ type SidebarView = 'budget' | 'assets' | 'upcoming' | 'day-detail';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const logout = useLogout();
   const { data: user } = useCurrentUser();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -93,7 +92,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    clearAuth();
+    logout();
     navigate('/login');
   };
 
