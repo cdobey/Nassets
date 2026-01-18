@@ -1,8 +1,8 @@
-import React from 'react';
-import { format } from 'date-fns';
-import { Calendar, Repeat, TrendingDown, TrendingUp } from 'lucide-react';
 import type { CalendarResponse } from '@/types';
 import { RecurrenceType } from '@/types';
+import { format } from 'date-fns';
+import { Calendar, Repeat, TrendingDown, TrendingUp } from 'lucide-react';
+import React from 'react';
 
 interface UpcomingTransactionsProps {
   calendar?: CalendarResponse;

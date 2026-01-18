@@ -1,6 +1,6 @@
-import React from 'react';
-import { Minus, Package, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { Minus, Package, Plus, X } from 'lucide-react';
+import React from 'react';
 
 type TransactionType = 'income' | 'expense' | 'savings';
 

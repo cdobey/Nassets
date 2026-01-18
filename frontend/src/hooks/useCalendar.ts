@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { CalendarResponse, BudgetSummary } from '@/types';
+import type { BudgetSummary, CalendarResponse } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 
 export const useCalendar = (year: number, month: number) => {
   return useQuery({

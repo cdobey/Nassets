@@ -1,11 +1,11 @@
+import { Lock, Mail, Sparkles, User } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Sparkles } from 'lucide-react';
 
-import { useLogin, useRegister } from '@/hooks';
-import { useAuthStore } from '@/store/auth';
 import { Logo } from '@/components';
+import { useLogin, useRegister } from '@/hooks';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/auth';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

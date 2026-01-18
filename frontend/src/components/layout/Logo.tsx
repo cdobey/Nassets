@@ -1,5 +1,5 @@
-import React from 'react';
 import { TrendingUp } from 'lucide-react';
+import React from 'react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';

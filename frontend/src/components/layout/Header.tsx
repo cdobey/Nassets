@@ -1,6 +1,6 @@
-import React from 'react';
-import { ChevronLeft, ChevronRight, LogOut, Settings } from 'lucide-react';
 import type { User } from '@/types';
+import { ChevronLeft, ChevronRight, LogOut, Settings } from 'lucide-react';
+import React from 'react';
 
 type ViewMode = 'day' | 'week' | 'month' | 'year';
 

@@ -1,3 +1,4 @@
-export { ProgressBar } from './ProgressBar';
-export { Modal, ModalHeader, ModalBody } from './Modal';
 export { Button } from './Button';
+export { Modal, ModalBody, ModalHeader } from './Modal';
+export { ProgressBar } from './ProgressBar';
+

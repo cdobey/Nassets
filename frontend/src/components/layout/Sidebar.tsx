@@ -1,13 +1,13 @@
-import React from 'react';
-import {
-  Calendar,
-  ChevronLeft,
-  LayoutDashboard,
-  ListChecks,
-  LogOut,
-  Package,
-} from 'lucide-react';
 import { format } from 'date-fns';
+import {
+    Calendar,
+    ChevronLeft,
+    LayoutDashboard,
+    ListChecks,
+    LogOut,
+    Package,
+} from 'lucide-react';
+import React from 'react';
 import { Logo } from './Logo';
 
 type SidebarView = 'budget' | 'assets' | 'upcoming' | 'day-detail';

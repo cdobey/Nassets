@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Calendar as CalendarIcon, Repeat, X } from 'lucide-react';
-import { RecurrenceType } from '@/types';
 import { Button, ProgressBar } from '@/components/ui';
+import { RecurrenceType } from '@/types';
+import { Calendar as CalendarIcon, Repeat, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface SavingsModalProps {
   assetName: string;
